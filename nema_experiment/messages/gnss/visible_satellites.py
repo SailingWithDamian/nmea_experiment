@@ -22,14 +22,16 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 '''
 from dataclasses import dataclass
-from typing import Optional, Tuple
+from typing import Optional
 
-from nema_experiment.helpers import un_format_nema_0183_data
+from nema_experiment.messages.base import BaseMessage
 from nema_experiment.messages.fields.gnss import GpsVisibleSatellite
 
 
 @dataclass(frozen=True, init=True)
-class GpsVisibleSatellites:
+class GpsVisibleSatellites(BaseMessage):
+    _IDENTIFIER = "GSV"
+
     total_messages: int
     current_message: int
     total_sv: int
@@ -38,23 +40,17 @@ class GpsVisibleSatellites:
     sv_3: Optional[GpsVisibleSatellite]
     sv_4: Optional[GpsVisibleSatellite]
 
-    def encode_nema_0183(self) -> Tuple[str, str]:
-        message = ",".join([
-                               f"{self.total_messages:d}",
-                               f"{self.current_message:d}",
-                               f"{self.total_sv:d}",
-                           ] +
-                           (self.sv_1.encode_nema_0183() if self.sv_1 else ['', '', '', '']) +
-                           (self.sv_2.encode_nema_0183() if self.sv_2 else ['', '', '', '']) +
-                           (self.sv_3.encode_nema_0183() if self.sv_3 else ['', '', '', '']) +
-                           (self.sv_4.encode_nema_0183() if self.sv_4 else []))
-        return "GSV", message
+    def _encode_nema_0183(self) -> str:
+        return ",".join([f"{self.total_messages:d}",
+                         f"{self.current_message:d}",
+                         f"{self.total_sv:d}"] +
+                        (self.sv_1.encode_nema_0183() if self.sv_1 else ['', '', '', '']) +
+                        (self.sv_2.encode_nema_0183() if self.sv_2 else ['', '', '', '']) +
+                        (self.sv_3.encode_nema_0183() if self.sv_3 else ['', '', '', '']) +
+                        (self.sv_4.encode_nema_0183() if self.sv_4 else []))
 
     @staticmethod
-    def decode_nema_0183(payload: str) -> 'GpsVisibleSatellites':
-        data = un_format_nema_0183_data(payload).split(',')
-        assert data[0] == 'GSV'
-
+    def _decode_nema_0183(data) -> 'GpsVisibleSatellites':
         return GpsVisibleSatellites(
             int(data[1]),
             int(data[2]),

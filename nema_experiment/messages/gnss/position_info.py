@@ -23,16 +23,18 @@ SOFTWARE.
 '''
 from dataclasses import dataclass
 from datetime import time
-from typing import Optional, Tuple
+from typing import Optional
 
-from nema_experiment.helpers import un_format_nema_0183_data
+from nema_experiment.messages.base import BaseMessage
 from nema_experiment.messages.fields.gnss import (GnssQualityIndicator,
                                                   Latitude,
                                                   Longitude)
 
 
 @dataclass(frozen=True, init=True)
-class GnssPositionInformation:
+class GnssPositionInformation(BaseMessage):
+    _IDENTIFIER = "GGA"
+
     time: time
     latitude: Latitude
     longitude: Longitude
@@ -44,8 +46,8 @@ class GnssPositionInformation:
     differential_age: Optional[int]
     reference_station: Optional[str]
 
-    def encode_nema_0183(self) -> Tuple[str, str]:
-        message = ",".join([
+    def _encode_nema_0183(self) -> str:
+        return ",".join([
             f'{self.time.strftime("%H%M%S")}.{self.time.strftime("%f")[0:3]}',
             f"{self.latitude.degrees:02d}{self.latitude.minutes:02d}.{self.latitude.decimal:04d}",
             self.latitude.indicator.value,
@@ -58,16 +60,12 @@ class GnssPositionInformation:
             "M",
             f"{self.geoidal:.1f}",
             "M",
-            f"{self.differential_age}" if self.differential_age else "",
-            self.reference_station if self.reference_station else "",
+            f"{self.differential_age}" if self.differential_age is not None else "",
+            self.reference_station if self.reference_station is not None else "",
         ])
-        return "GGA", message
 
     @staticmethod
-    def decode_nema_0183(payload: str) -> 'GnssPositionInformation':
-        data = un_format_nema_0183_data(payload).split(',')
-        assert data[0] == 'GGA'
-
+    def _decode_nema_0183(data) -> 'GnssPositionInformation':
         return GnssPositionInformation(
             time(hour=int(data[1][0:2]),
                  minute=int(data[1][2:4]),

@@ -21,42 +21,31 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 '''
-from dataclasses import dataclass
-from typing import Optional, Tuple
+from typing import Tuple, List
 
 from nema_experiment.helpers import un_format_nema_0183_data
-from nema_experiment.messages.fields.ais import AisChannel
 
 
-@dataclass(frozen=True, init=True)
-class AisMessage:
-    total_fragments: int
-    fragment: int
-    message_id: Optional[int]
-    channel: AisChannel
-    payload: str
+class BaseMessage:
+    _IDENTIFIER = ""
 
-    def encode_nema_0183(self) -> Tuple[str, str]:
-        message = ",".join(
-            [
-                f"{self.total_fragments:d}",
-                f"{self.fragment:d}",
-                f"{self.message_id:d}" if self.message_id is not None else "",
-                self.channel.value,
-                self.payload,
-            ]
-        )
-        return "VDM", message
+    def _encode_nema_0183(self) -> str:
+        raise NotImplementedError
 
     @staticmethod
-    def decode_nema_0183(payload: str) -> 'AisMessage':
-        data = un_format_nema_0183_data(payload).split(',')
-        assert data[0] == 'VDM'
+    def _decode_nema_0183(data: List[str]) -> 'BaseMessage':
+        raise NotImplementedError
 
-        return AisMessage(
-            int(data[1]),
-            int(data[2]),
-            int(data[3]) if data[3] else None,
-            AisChannel(data[4]),
-            f'{data[5]},{data[6]}',
-        )
+    def encode_nema_0183(self) -> Tuple[str, str]:
+        """
+
+        :rtype: object
+        """
+        message = self._encode_nema_0183()
+        return self._IDENTIFIER, message
+
+    @classmethod
+    def decode_nema_0183(cls, payload: str) -> 'BaseMessage':
+        data = un_format_nema_0183_data(payload).split(',')
+        assert data[0] == cls._IDENTIFIER
+        return cls._decode_nema_0183(data)

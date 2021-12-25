@@ -96,24 +96,24 @@ class Longitude:
 
 @dataclass(frozen=True, init=True)
 class MagneticVariation:
-    degrees: int
-    minutes: int
-    decimal: int
+    degrees: float
+    minutes: Optional[int]
+    decimal: Optional[int]
     indicator: LongitudeIndicator
 
     @staticmethod
     def decode_nema_0183(dms: str, indicator: str) -> 'MagneticVariation':
         return MagneticVariation(
-            int(dms[0:3]),
-            int(dms[3:5]),
-            int(dms[6:]),
+            float(dms[0:3]),
+            int(dms[3:5]) if dms[3:5] else None,
+            int(dms[6:]) if dms[6:] else None,
             LongitudeIndicator(indicator),
         )
 
 
 @dataclass(frozen=True, init=True)
 class GpsVisibleSatellite:
-    prn: int
+    prn: Optional[int]
     elevation: Optional[int]
     azimuth: Optional[int]
     snr: Optional[int]
@@ -121,15 +121,15 @@ class GpsVisibleSatellite:
     def encode_nema_0183(self) -> List[str]:
         return [
             f"{self.prn:02d}",
-            f"{self.elevation:02d}" if self.elevation else "",
-            f"{self.azimuth:03d}" if self.azimuth else "",
-            f"{self.snr:02d}" if self.snr else "",
+            f"{self.elevation:02d}" if self.elevation is not None else "",
+            f"{self.azimuth:03d}" if self.azimuth is not None else "",
+            f"{self.snr:02d}" if self.snr is not None else "",
         ]
 
     @staticmethod
     def decode_nema_0183(payload: List[str]) -> 'GpsVisibleSatellite':
         return GpsVisibleSatellite(
-            int(payload[0]),
+            int(payload[0]) if payload[0] else None,
             int(payload[1]) if payload[1] else None,
             int(payload[2]) if payload[2] else None,
             int(payload[3]) if payload[3] else None,

@@ -22,15 +22,17 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 '''
 from dataclasses import dataclass
-from typing import Optional, Tuple
+from typing import Optional
 
-from nema_experiment.helpers import un_format_nema_0183_data
+from nema_experiment.messages.base import BaseMessage
 from nema_experiment.messages.fields.gnss import (GpsStatus,
                                                   GpsMode)
 
 
 @dataclass(frozen=True, init=True)
-class GpsActiveSatellites:
+class GpsActiveSatellites(BaseMessage):
+    _IDENTIFIER = "GSA"
+
     gps_status: GpsStatus
     gps_mode: GpsMode
     sv_1: Optional[int]
@@ -49,33 +51,29 @@ class GpsActiveSatellites:
     hdop: float
     vdop: float
 
-    def encode_nema_0183(self) -> Tuple[str, str]:
-        message = ",".join([
+    def _encode_nema_0183(self) -> str:
+        return ",".join([
             self.gps_status.value,
             f"{self.gps_mode.value:d}",
-            f"{self.sv_1:02d}" if self.sv_1 else "",
-            f"{self.sv_2:02d}" if self.sv_2 else "",
-            f"{self.sv_3:02d}" if self.sv_3 else "",
-            f"{self.sv_4:02d}" if self.sv_4 else "",
-            f"{self.sv_5:02d}" if self.sv_5 else "",
-            f"{self.sv_6:02d}" if self.sv_6 else "",
-            f"{self.sv_7:02d}" if self.sv_7 else "",
-            f"{self.sv_8:02d}" if self.sv_8 else "",
-            f"{self.sv_9:02d}" if self.sv_9 else "",
-            f"{self.sv_10:02d}" if self.sv_10 else "",
-            f"{self.sv_11:02d}" if self.sv_11 else "",
-            f"{self.sv_12:02d}" if self.sv_12 else "",
+            f"{self.sv_1:02d}" if self.sv_1 is not None else "",
+            f"{self.sv_2:02d}" if self.sv_2 is not None else "",
+            f"{self.sv_3:02d}" if self.sv_3 is not None else "",
+            f"{self.sv_4:02d}" if self.sv_4 is not None else "",
+            f"{self.sv_5:02d}" if self.sv_5 is not None else "",
+            f"{self.sv_6:02d}" if self.sv_6 is not None else "",
+            f"{self.sv_7:02d}" if self.sv_7 is not None else "",
+            f"{self.sv_8:02d}" if self.sv_8 is not None else "",
+            f"{self.sv_9:02d}" if self.sv_9 is not None else "",
+            f"{self.sv_10:02d}" if self.sv_10 is not None else "",
+            f"{self.sv_11:02d}" if self.sv_11 is not None else "",
+            f"{self.sv_12:02d}" if self.sv_12 is not None else "",
             f"{self.pdop:.2f}",
             f"{self.hdop:.2f}",
             f"{self.vdop:.2f}",
         ])
-        return "GSA", message
 
     @staticmethod
-    def decode_nema_0183(payload: str) -> 'GpsActiveSatellites':
-        data = un_format_nema_0183_data(payload).split(',')
-        assert data[0] == 'GSA'
-
+    def _decode_nema_0183(data) -> 'GpsActiveSatellites':
         return GpsActiveSatellites(
             GpsStatus(data[1]),
             GpsMode(int(data[2])),

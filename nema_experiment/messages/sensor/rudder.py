@@ -22,41 +22,28 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 '''
 from dataclasses import dataclass
-from typing import Optional, Tuple
 
-from nema_experiment.helpers import un_format_nema_0183_data
-from nema_experiment.messages.fields.ais import AisChannel
+from nema_experiment.messages.base import BaseMessage
 
 
 @dataclass(frozen=True, init=True)
-class AisMessage:
-    total_fragments: int
-    fragment: int
-    message_id: Optional[int]
-    channel: AisChannel
-    payload: str
+class RudderAngle(BaseMessage):
+    _IDENTIFIER = "RSA"
 
-    def encode_nema_0183(self) -> Tuple[str, str]:
-        message = ",".join(
-            [
-                f"{self.total_fragments:d}",
-                f"{self.fragment:d}",
-                f"{self.message_id:d}" if self.message_id is not None else "",
-                self.channel.value,
-                self.payload,
-            ]
-        )
-        return "VDM", message
+    degrees: float
+    valid: bool
+
+    def _encode_nema_0183(self) -> str:
+        return ",".join([
+            f'{self.degrees:.1f}',
+            "A" if self.valid else "V",
+            "",
+            "V",
+        ])
 
     @staticmethod
-    def decode_nema_0183(payload: str) -> 'AisMessage':
-        data = un_format_nema_0183_data(payload).split(',')
-        assert data[0] == 'VDM'
-
-        return AisMessage(
-            int(data[1]),
-            int(data[2]),
-            int(data[3]) if data[3] else None,
-            AisChannel(data[4]),
-            f'{data[5]},{data[6]}',
+    def _decode_nema_0183(data) -> 'RudderAngle':
+        return RudderAngle(
+            float(data[1]),
+            data[2] == "A"
         )

@@ -23,9 +23,9 @@ SOFTWARE.
 '''
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Optional, Tuple
+from typing import Optional
 
-from nema_experiment.helpers import un_format_nema_0183_data
+from nema_experiment.messages.base import BaseMessage
 from nema_experiment.messages.fields.gnss import (RecieverIndicator,
                                                   Latitude,
                                                   Longitude,
@@ -33,7 +33,9 @@ from nema_experiment.messages.fields.gnss import (RecieverIndicator,
 
 
 @dataclass(frozen=True, init=True)
-class GnssMinimumSpecificTransit:
+class GnssMinimumSpecificTransit(BaseMessage):
+    _IDENTIFIER = "RMC"
+
     time: datetime
     reciever_status: RecieverIndicator
     latitude: Latitude
@@ -42,7 +44,7 @@ class GnssMinimumSpecificTransit:
     course: float
     variation: Optional[MagneticVariation]
 
-    def encode_nema_0183(self) -> Tuple[str, str]:
+    def _encode_nema_0183(self) -> str:
         variation = ["", "", "A"]
         if self.variation:
             variation = [
@@ -50,22 +52,18 @@ class GnssMinimumSpecificTransit:
                 self.variation.indicator.value,
             ]
 
-        message = ",".join([f'{self.time.strftime("%H%M%S")}.{self.time.strftime("%f")[0:3]}',
-                            self.reciever_status.value,
-                            f"{self.latitude.degrees:02d}{self.latitude.minutes:02d}.{self.latitude.decimal:04d}",
-                            self.latitude.indicator.value,
-                            f"{self.longitude.degrees:03d}{self.longitude.minutes:02d}.{self.longitude.decimal:04d}",
-                            self.longitude.indicator.value,
-                            f"{self.speed:.2f}",
-                            f"{self.course:.2f}",
-                            self.time.strftime("%d%m%y")] + variation)
-        return "RMC", message
+        return ",".join([f'{self.time.strftime("%H%M%S")}.{self.time.strftime("%f")[0:3]}',
+                         self.reciever_status.value,
+                         f"{self.latitude.degrees:02d}{self.latitude.minutes:02d}.{self.latitude.decimal:04d}",
+                         self.latitude.indicator.value,
+                         f"{self.longitude.degrees:03d}{self.longitude.minutes:02d}.{self.longitude.decimal:04d}",
+                         self.longitude.indicator.value,
+                         f"{self.speed:.2f}",
+                         f"{self.course:.2f}",
+                         self.time.strftime("%d%m%y")] + variation)
 
     @staticmethod
-    def decode_nema_0183(payload: str) -> 'GnssMinimumSpecificTransit':
-        data = un_format_nema_0183_data(payload).split(',')
-        assert data[0] == 'RMC'
-
+    def _decode_nema_0183(data) -> 'GnssMinimumSpecificTransit':
         return GnssMinimumSpecificTransit(
             datetime(year=int(data[9][4:6]),
                      month=int(data[9][2:4]),
