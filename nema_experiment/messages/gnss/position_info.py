@@ -61,12 +61,12 @@ class GnssPositionInformation:
             f"{self.differential_age}" if self.differential_age else "",
             self.reference_station if self.reference_station else "",
         ])
-        return "GPGGA", message
+        return "GGA", message
 
     @staticmethod
-    def decode_nema_0183(payload: bytes) -> 'GnssPositionInformation':
-        data = un_format_nema_0183_data(payload.decode('utf-8')).split(',')
-        assert data[0] == 'GPGGA'
+    def decode_nema_0183(payload: str) -> 'GnssPositionInformation':
+        data = un_format_nema_0183_data(payload).split(',')
+        assert data[0] == 'GGA'
 
         return GnssPositionInformation(
             time(hour=int(data[1][0:2]),

@@ -60,9 +60,9 @@ def test_encoder():
         ).encode(),
     ).encode_nema_0183()
 
-    assert message_type == "AIVDM"
+    assert message_type == "VDM"
     assert message == "1,1,,B,1;U=g`?P010jHdLLBh4f4?wtAU2L,0"
-    assert format_nema_0183_data(message_type, message) == b"!AIVDM,1,1,,B,1;U=g`?P010jHdLLBh4f4?wtAU2L,0*42\r\n"
+    assert format_nema_0183_data("AI", message_type, message) == "!AIVDM,1,1,,B,1;U=g`?P010jHdLLBh4f4?wtAU2L,0*42"
 
 
 def test_decoder():
@@ -92,6 +92,6 @@ def test_decoder():
     )
 
     decoded = AisMessage.decode_nema_0183(
-        b"!AIVDM,1,1,,B,1;U=g`?P010jHdLLBh4f4?wtAU2L,0*42\r\n"
+        "!AIVDM,1,1,,B,1;U=g`?P010jHdLLBh4f4?wtAU2L,0*42"
     )
     assert decoded == expected

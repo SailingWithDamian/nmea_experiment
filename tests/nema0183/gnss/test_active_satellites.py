@@ -48,11 +48,11 @@ def test_encoder():
         1.38,
     ).encode_nema_0183()
 
-    assert message_type == "GPGSA"
+    assert message_type == "GSA"
     assert message == "A,3,10,07,05,02,29,04,08,13,,,,,1.72,1.03,1.38"
 
-    expected_data = b"$GPGSA,A,3,10,07,05,02,29,04,08,13,,,,,1.72,1.03,1.38*0A\r\n"
-    assert format_nema_0183_data(message_type, message) == expected_data
+    expected_data = "$GPGSA,A,3,10,07,05,02,29,04,08,13,,,,,1.72,1.03,1.38*0A"
+    assert format_nema_0183_data("GP", message_type, message) == expected_data
 
 
 def test_decoder():
@@ -77,6 +77,6 @@ def test_decoder():
     )
 
     decoded = GpsActiveSatellites.decode_nema_0183(
-        b"$GPGSA,A,3,10,07,05,02,29,04,08,13,,,,,1.72,1.03,1.38*0A\r\n"
+        "$GPGSA,A,3,10,07,05,02,29,04,08,13,,,,,1.72,1.03,1.38*0A"
     )
     assert decoded == expected

@@ -69,12 +69,12 @@ class GpsActiveSatellites:
             f"{self.hdop:.2f}",
             f"{self.vdop:.2f}",
         ])
-        return "GPGSA", message
+        return "GSA", message
 
     @staticmethod
-    def decode_nema_0183(payload: bytes) -> 'GpsActiveSatellites':
-        data = un_format_nema_0183_data(payload.decode('utf-8')).split(',')
-        assert data[0] == 'GPGSA'
+    def decode_nema_0183(payload: str) -> 'GpsActiveSatellites':
+        data = un_format_nema_0183_data(payload).split(',')
+        assert data[0] == 'GSA'
 
         return GpsActiveSatellites(
             GpsStatus(data[1]),

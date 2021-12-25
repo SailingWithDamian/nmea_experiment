@@ -46,12 +46,12 @@ class AisMessage:
                 self.payload,
             ]
         )
-        return "AIVDM", message
+        return "VDM", message
 
     @staticmethod
-    def decode_nema_0183(payload: bytes) -> 'AisMessage':
-        data = un_format_nema_0183_data(payload.decode('utf-8')).split(',')
-        assert data[0] == 'AIVDM'
+    def decode_nema_0183(payload: str) -> 'AisMessage':
+        data = un_format_nema_0183_data(payload).split(',')
+        assert data[0] == 'VDM'
 
         return AisMessage(
             int(data[1]),

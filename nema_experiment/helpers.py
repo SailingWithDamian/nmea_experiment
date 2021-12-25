@@ -22,7 +22,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 '''
 import operator
-import socket
 from functools import reduce
 
 
@@ -42,12 +41,12 @@ def un_format_nema_0183_data(payload: str) -> str:
     data, checksum = payload[0:-3], payload[-2:]
     assert checksum_nema_0183_data(data) == checksum
 
-    return data
+    return data[2:]  # First 2 characters are the talker ID
 
 
-def format_nema_0183_data(message_type: str, message: str) -> bytes:
+def format_nema_0183_data(talker_id: str, message_type: str, message: str) -> str:
     # Message type comes first
-    data = f"{message_type},{message}"
+    data = f"{talker_id}{message_type},{message}"
 
     # The checksum is the bitwise exclusive OR of ASCII codes of all
     # characters between the $ and *, not inclusive.
@@ -56,20 +55,11 @@ def format_nema_0183_data(message_type: str, message: str) -> bytes:
     # Calculate if this is a standard NEMA message
     # or an encapsulated message requiring a specific decoder
     payload_type = '$'
-    if message_type in ('AIVDM',):
+    if message_type in ('VDM',):
         payload_type = '!'
 
     # Messages have a maximum length of 82 characters
-    payload = f"{payload_type}{data}*{checksum}\r\n"
+    payload = f"{payload_type}{data}*{checksum}"
     assert len(payload) <= 82
 
-    return payload.encode("utf-8")
-
-
-def emit_nema_0183_data(message_type: str, message: str, host: str, port: int) -> None:
-    # Build the message & add a checksum
-    payload = format_nema_0183_data(message_type, message)
-
-    # Throw out over UDP
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    s.sendto(payload, (host, port))
+    return payload

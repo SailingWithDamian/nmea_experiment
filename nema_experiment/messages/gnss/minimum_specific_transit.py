@@ -59,12 +59,12 @@ class GnssMinimumSpecificTransit:
                             f"{self.speed:.2f}",
                             f"{self.course:.2f}",
                             self.time.strftime("%d%m%y")] + variation)
-        return "GPRMC", message
+        return "RMC", message
 
     @staticmethod
-    def decode_nema_0183(payload: bytes) -> 'GnssMinimumSpecificTransit':
-        data = un_format_nema_0183_data(payload.decode('utf-8')).split(',')
-        assert data[0] == 'GPRMC'
+    def decode_nema_0183(payload: str) -> 'GnssMinimumSpecificTransit':
+        data = un_format_nema_0183_data(payload).split(',')
+        assert data[0] == 'RMC'
 
         return GnssMinimumSpecificTransit(
             datetime(year=int(data[9][4:6]),

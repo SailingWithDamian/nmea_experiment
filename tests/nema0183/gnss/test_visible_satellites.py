@@ -37,11 +37,11 @@ def test_encoder_1():
         GpsVisibleSatellite(8, 54, 157, 30),
     ).encode_nema_0183()
 
-    assert message_type == "GPGSV"
+    assert message_type == "GSV"
     assert message == "3,1,11,10,63,137,17,07,61,098,15,05,59,290,20,08,54,157,30"
 
-    expected_data = b"$GPGSV,3,1,11,10,63,137,17,07,61,098,15,05,59,290,20,08,54,157,30*70\r\n"
-    assert format_nema_0183_data(message_type, message) == expected_data
+    expected_data = "$GPGSV,3,1,11,10,63,137,17,07,61,098,15,05,59,290,20,08,54,157,30*70"
+    assert format_nema_0183_data("GP", message_type, message) == expected_data
 
 
 def test_decoder_1():
@@ -56,7 +56,7 @@ def test_decoder_1():
     )
 
     decoded = GpsVisibleSatellites.decode_nema_0183(
-        b"$GPGSV,3,1,11,10,63,137,17,07,61,098,15,05,59,290,20,08,54,157,30*70\r\n"
+        "$GPGSV,3,1,11,10,63,137,17,07,61,098,15,05,59,290,20,08,54,157,30*70"
     )
     assert decoded == expected
 
@@ -72,11 +72,11 @@ def test_encoder_2():
         GpsVisibleSatellite(4, 14, 186, 14),
     ).encode_nema_0183()
 
-    assert message_type == "GPGSV"
+    assert message_type == "GSV"
     assert message == "3,2,11,02,39,223,19,13,28,070,17,26,23,252,,04,14,186,14"
 
-    expected_data = b"$GPGSV,3,2,11,02,39,223,19,13,28,070,17,26,23,252,,04,14,186,14*79\r\n"
-    assert format_nema_0183_data(message_type, message) == expected_data
+    expected_data = "$GPGSV,3,2,11,02,39,223,19,13,28,070,17,26,23,252,,04,14,186,14*79"
+    assert format_nema_0183_data("GP", message_type, message) == expected_data
 
 
 def test_decoder_2():
@@ -91,7 +91,7 @@ def test_decoder_2():
     )
 
     decoded = GpsVisibleSatellites.decode_nema_0183(
-        b"$GPGSV,3,2,11,02,39,223,19,13,28,070,17,26,23,252,,04,14,186,14*79\r\n"
+        "$GPGSV,3,2,11,02,39,223,19,13,28,070,17,26,23,252,,04,14,186,14*79"
     )
     assert decoded == expected
 
@@ -107,11 +107,11 @@ def test_encoder_3():
         None,
     ).encode_nema_0183()
 
-    assert message_type == "GPGSV"
+    assert message_type == "GSV"
     assert message == "3,3,11,29,09,301,24,16,09,020,,36,,,"
 
-    expected_data = b"$GPGSV,3,3,11,29,09,301,24,16,09,020,,36,,,*76\r\n"
-    assert format_nema_0183_data(message_type, message) == expected_data
+    expected_data = "$GPGSV,3,3,11,29,09,301,24,16,09,020,,36,,,*76"
+    assert format_nema_0183_data("GP", message_type, message) == expected_data
 
 
 def test_decoder_3():
@@ -126,6 +126,6 @@ def test_decoder_3():
     )
 
     decoded = GpsVisibleSatellites.decode_nema_0183(
-        b"$GPGSV,3,3,11,29,09,301,24,16,09,020,,36,,,*76\r\n"
+        "$GPGSV,3,3,11,29,09,301,24,16,09,020,,36,,,*76"
     )
     assert decoded == expected

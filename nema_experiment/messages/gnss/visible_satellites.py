@@ -48,12 +48,12 @@ class GpsVisibleSatellites:
                            (self.sv_2.encode_nema_0183() if self.sv_2 else ['', '', '', '']) +
                            (self.sv_3.encode_nema_0183() if self.sv_3 else ['', '', '', '']) +
                            (self.sv_4.encode_nema_0183() if self.sv_4 else []))
-        return "GPGSV", message
+        return "GSV", message
 
     @staticmethod
-    def decode_nema_0183(payload: bytes) -> 'GpsVisibleSatellites':
-        data = un_format_nema_0183_data(payload.decode('utf-8')).split(',')
-        assert data[0] == 'GPGSV'
+    def decode_nema_0183(payload: str) -> 'GpsVisibleSatellites':
+        data = un_format_nema_0183_data(payload).split(',')
+        assert data[0] == 'GSV'
 
         return GpsVisibleSatellites(
             int(data[1]),

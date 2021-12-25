@@ -43,11 +43,11 @@ def test_encoder():
         None,
     ).encode_nema_0183()
 
-    assert message_type == "GPRMC"
+    assert message_type == "RMC"
     assert message == "092750.000,A,5321.6802,N,00630.3372,W,0.02,31.66,280511,,,A"
 
-    expected_data = b"$GPRMC,092750.000,A,5321.6802,N,00630.3372,W,0.02,31.66,280511,,,A*43\r\n"
-    assert format_nema_0183_data(message_type, message) == expected_data
+    expected_data = "$GPRMC,092750.000,A,5321.6802,N,00630.3372,W,0.02,31.66,280511,,,A*43"
+    assert format_nema_0183_data("GP", message_type, message) == expected_data
 
 
 def test_decoder():
@@ -62,6 +62,6 @@ def test_decoder():
     )
 
     decoded = GnssMinimumSpecificTransit.decode_nema_0183(
-        b"$GPRMC,092750.000,A,5321.6802,N,00630.3372,W,0.02,31.66,280511,,,A*43\r\n"
+        "$GPRMC,092750.000,A,5321.6802,N,00630.3372,W,0.02,31.66,280511,,,A*43"
     )
     assert decoded == expected

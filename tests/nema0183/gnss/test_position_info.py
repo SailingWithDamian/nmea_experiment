@@ -46,11 +46,11 @@ def test_encoder():
         None,
     ).encode_nema_0183()
 
-    assert message_type == "GPGGA"
+    assert message_type == "GGA"
     assert message == "092750.000,5321.6802,N,00630.3372,W,1,8,1.03,61.7,M,55.2,M,,"
 
-    expected_data = b"$GPGGA,092750.000,5321.6802,N,00630.3372,W,1,8,1.03,61.7,M,55.2,M,,*76\r\n"
-    assert format_nema_0183_data(message_type, message) == expected_data
+    expected_data = "$GPGGA,092750.000,5321.6802,N,00630.3372,W,1,8,1.03,61.7,M,55.2,M,,*76"
+    assert format_nema_0183_data("GP", message_type, message) == expected_data
 
 
 def test_decoder():
@@ -68,6 +68,6 @@ def test_decoder():
     )
 
     decoded = GnssPositionInformation.decode_nema_0183(
-        b"$GPGGA,092750.000,5321.6802,N,00630.3372,W,1,8,1.03,61.7,M,55.2,M,,*76\r\n"
+        "$GPGGA,092750.000,5321.6802,N,00630.3372,W,1,8,1.03,61.7,M,55.2,M,,*76"
     )
     assert decoded == expected
