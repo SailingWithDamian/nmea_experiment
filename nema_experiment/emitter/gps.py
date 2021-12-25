@@ -90,6 +90,6 @@ async def make_a_square(address: str, port: int) -> None:
             None,
         ).encode_nema_0183()
         payload = format_nema_0183_data("NT", message_type, message)
-        s.sendto(f"{payload}\r\n".encode('utf-8'), (address, port))
+        s.sendto(f"{payload}\r\n".encode('ascii'), (address, port))
 
         await asyncio.sleep(2)
