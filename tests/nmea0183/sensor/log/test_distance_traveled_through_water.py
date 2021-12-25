@@ -21,34 +21,34 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 '''
-from nmea_experiment.messages.ais.position import (AisPositionMessage,
-                                                   AisNavigationStatus,
-                                                   AisManeuverIndicator,
-                                                   AisRaimStatus)
-from nmea_experiment.messages.fields.gnss import (Latitude,
-                                                  Longitude,
-                                                  LongitudeIndicator,
-                                                  LatitudeIndicator)
+from nmea_experiment.helpers import format_nmea_0183_data
+from nmea_experiment.messages.sensor.log import DistanceTraveledThroughWater
 
 
 def test_encoder():
-    payload = AisPositionMessage(
-        1,
-        None,
-        777220000,
-        AisNavigationStatus.NOT_DEFINED,
-        None,
-        1,
-        0,
-        Longitude(11, 0, 25.044000000117705, LongitudeIndicator.EAST),
-        Latitude(49, 26, 44.07600000013127, LatitudeIndicator.NORTH),
+    message_type, message = DistanceTraveledThroughWater(
+        6982.199,
+        0.000,
         None,
         None,
-        62,
-        AisManeuverIndicator.NOT_AVAILABLE,
-        4,
-        AisRaimStatus.NOT_IN_USE,
-        413852,
-    ).encode()
+    ).encode_nmea_0183()
 
-    assert payload == "1;U=g`?P010jHdLLBh4f4?wtAU2L,0"
+    assert message_type == "VLW"
+    assert message == "6982.199,N,0.000,N"
+
+    expected_data = "$YDVLW,6982.199,N,0.000,N*64"
+    assert format_nmea_0183_data("YD", message_type, message) == expected_data
+
+
+def test_decoder():
+    expected = DistanceTraveledThroughWater(
+        6982.199,
+        0.000,
+        None,
+        None,
+    )
+
+    decoded = DistanceTraveledThroughWater.decode_nmea_0183(
+        "$YDVLW,6982.199,N,0.000,N*64"
+    )
+    assert decoded == expected

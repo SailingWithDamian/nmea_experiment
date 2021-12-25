@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 '''
 MIT License
 
@@ -21,34 +22,27 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 '''
-from nmea_experiment.messages.ais.position import (AisPositionMessage,
-                                                   AisNavigationStatus,
-                                                   AisManeuverIndicator,
-                                                   AisRaimStatus)
-from nmea_experiment.messages.fields.gnss import (Latitude,
-                                                  Longitude,
-                                                  LongitudeIndicator,
-                                                  LatitudeIndicator)
+import asyncio
+import logging
+import sys
+
+import click
+
+from nmea_experiment.emitter.ais import anchor_near_square
+from nmea_experiment.emitter.gps import make_a_square
 
 
-def test_encoder():
-    payload = AisPositionMessage(
-        1,
-        None,
-        777220000,
-        AisNavigationStatus.NOT_DEFINED,
-        None,
-        1,
-        0,
-        Longitude(11, 0, 25.044000000117705, LongitudeIndicator.EAST),
-        Latitude(49, 26, 44.07600000013127, LatitudeIndicator.NORTH),
-        None,
-        None,
-        62,
-        AisManeuverIndicator.NOT_AVAILABLE,
-        4,
-        AisRaimStatus.NOT_IN_USE,
-        413852,
-    ).encode()
+@click.command()
+@click.option('--address', default='0.0.0.0')
+@click.option('--port', default=2000)
+def main(address: str, port: int) -> None:
+    logging.basicConfig(stream=sys.stderr, level=logging.INFO)
 
-    assert payload == "1;U=g`?P010jHdLLBh4f4?wtAU2L,0"
+    loop = asyncio.get_event_loop()
+    loop.create_task(make_a_square(address, port))
+    loop.create_task(anchor_near_square(address, port))
+    loop.run_forever()
+
+
+if __name__ == "__main__":
+    main()

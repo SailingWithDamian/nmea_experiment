@@ -21,34 +21,29 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 '''
-from nmea_experiment.messages.ais.position import (AisPositionMessage,
-                                                   AisNavigationStatus,
-                                                   AisManeuverIndicator,
-                                                   AisRaimStatus)
-from nmea_experiment.messages.fields.gnss import (Latitude,
-                                                  Longitude,
-                                                  LongitudeIndicator,
-                                                  LatitudeIndicator)
+from dataclasses import dataclass
+
+from nmea_experiment.messages.base import BaseMessage
 
 
-def test_encoder():
-    payload = AisPositionMessage(
-        1,
-        None,
-        777220000,
-        AisNavigationStatus.NOT_DEFINED,
-        None,
-        1,
-        0,
-        Longitude(11, 0, 25.044000000117705, LongitudeIndicator.EAST),
-        Latitude(49, 26, 44.07600000013127, LatitudeIndicator.NORTH),
-        None,
-        None,
-        62,
-        AisManeuverIndicator.NOT_AVAILABLE,
-        4,
-        AisRaimStatus.NOT_IN_USE,
-        413852,
-    ).encode()
+@dataclass(frozen=True, init=True)
+class RudderAngle(BaseMessage):
+    _IDENTIFIER = "RSA"
 
-    assert payload == "1;U=g`?P010jHdLLBh4f4?wtAU2L,0"
+    degrees: float
+    valid: bool
+
+    def _encode_nmea_0183(self) -> str:
+        return ",".join([
+            f'{self.degrees:.1f}',
+            "A" if self.valid else "V",
+            "",
+            "V",
+        ])
+
+    @staticmethod
+    def _decode_nmea_0183(data) -> 'RudderAngle':
+        return RudderAngle(
+            float(data[1]),
+            data[2] == "A"
+        )

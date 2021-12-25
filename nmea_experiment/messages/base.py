@@ -21,34 +21,31 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 '''
-from nmea_experiment.messages.ais.position import (AisPositionMessage,
-                                                   AisNavigationStatus,
-                                                   AisManeuverIndicator,
-                                                   AisRaimStatus)
-from nmea_experiment.messages.fields.gnss import (Latitude,
-                                                  Longitude,
-                                                  LongitudeIndicator,
-                                                  LatitudeIndicator)
+from typing import Tuple, List
+
+from nmea_experiment.helpers import un_format_nmea_0183_data
 
 
-def test_encoder():
-    payload = AisPositionMessage(
-        1,
-        None,
-        777220000,
-        AisNavigationStatus.NOT_DEFINED,
-        None,
-        1,
-        0,
-        Longitude(11, 0, 25.044000000117705, LongitudeIndicator.EAST),
-        Latitude(49, 26, 44.07600000013127, LatitudeIndicator.NORTH),
-        None,
-        None,
-        62,
-        AisManeuverIndicator.NOT_AVAILABLE,
-        4,
-        AisRaimStatus.NOT_IN_USE,
-        413852,
-    ).encode()
+class BaseMessage:
+    _IDENTIFIER = ""
 
-    assert payload == "1;U=g`?P010jHdLLBh4f4?wtAU2L,0"
+    def _encode_nmea_0183(self) -> str:
+        raise NotImplementedError
+
+    @staticmethod
+    def _decode_nmea_0183(data: List[str]) -> 'BaseMessage':
+        raise NotImplementedError
+
+    def encode_nmea_0183(self) -> Tuple[str, str]:
+        """
+
+        :rtype: object
+        """
+        message = self._encode_nmea_0183()
+        return self._IDENTIFIER, message
+
+    @classmethod
+    def decode_nmea_0183(cls, payload: str) -> 'BaseMessage':
+        data = un_format_nmea_0183_data(payload).split(',')
+        assert data[0] == cls._IDENTIFIER
+        return cls._decode_nmea_0183(data)

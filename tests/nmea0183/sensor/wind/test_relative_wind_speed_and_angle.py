@@ -21,34 +21,36 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 '''
-from nmea_experiment.messages.ais.position import (AisPositionMessage,
-                                                   AisNavigationStatus,
-                                                   AisManeuverIndicator,
-                                                   AisRaimStatus)
-from nmea_experiment.messages.fields.gnss import (Latitude,
-                                                  Longitude,
-                                                  LongitudeIndicator,
-                                                  LatitudeIndicator)
+from nmea_experiment.helpers import format_nmea_0183_data
+from nmea_experiment.messages.sensor.wind import RelativeWindSpeedAndAngle
 
 
 def test_encoder():
-    payload = AisPositionMessage(
-        1,
-        None,
-        777220000,
-        AisNavigationStatus.NOT_DEFINED,
-        None,
-        1,
-        0,
-        Longitude(11, 0, 25.044000000117705, LongitudeIndicator.EAST),
-        Latitude(49, 26, 44.07600000013127, LatitudeIndicator.NORTH),
-        None,
-        None,
-        62,
-        AisManeuverIndicator.NOT_AVAILABLE,
-        4,
-        AisRaimStatus.NOT_IN_USE,
-        413852,
-    ).encode()
+    message_type, message = RelativeWindSpeedAndAngle(
+        120.0,
+        "PORT",
+        12.1,
+        6.2,
+        22.4,
+    ).encode_nmea_0183()
 
-    assert payload == "1;U=g`?P010jHdLLBh4f4?wtAU2L,0"
+    assert message_type == "VWR"
+    assert message == "120.0,L,12.1,N,6.2,M,22.4,K"
+
+    expected_data = "$YDVWR,120.0,L,12.1,N,6.2,M,22.4,K*4B"
+    assert format_nmea_0183_data("YD", message_type, message) == expected_data
+
+
+def test_decoder():
+    expected = RelativeWindSpeedAndAngle(
+        111.0,
+        "PORT",
+        6.3,
+        3.2,
+        11.7,
+    )
+
+    decoded = RelativeWindSpeedAndAngle.decode_nmea_0183(
+        "$YDVWR,111.0,L,6.3,N,3.2,M,11.7,K*78"
+    )
+    assert decoded == expected

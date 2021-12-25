@@ -21,34 +21,34 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 '''
-from nmea_experiment.messages.ais.position import (AisPositionMessage,
-                                                   AisNavigationStatus,
-                                                   AisManeuverIndicator,
-                                                   AisRaimStatus)
-from nmea_experiment.messages.fields.gnss import (Latitude,
-                                                  Longitude,
-                                                  LongitudeIndicator,
-                                                  LatitudeIndicator)
+from nmea_experiment.helpers import format_nmea_0183_data
+from nmea_experiment.messages.sensor.wind import WindDirectionAndSpeed
 
 
 def test_encoder():
-    payload = AisPositionMessage(
-        1,
-        None,
-        777220000,
-        AisNavigationStatus.NOT_DEFINED,
-        None,
-        1,
-        0,
-        Longitude(11, 0, 25.044000000117705, LongitudeIndicator.EAST),
-        Latitude(49, 26, 44.07600000013127, LatitudeIndicator.NORTH),
-        None,
-        None,
-        62,
-        AisManeuverIndicator.NOT_AVAILABLE,
-        4,
-        AisRaimStatus.NOT_IN_USE,
-        413852,
-    ).encode()
+    message_type, message = WindDirectionAndSpeed(
+        125.4,
+        123.7,
+        6.9,
+        3.5,
+    ).encode_nmea_0183()
 
-    assert payload == "1;U=g`?P010jHdLLBh4f4?wtAU2L,0"
+    assert message_type == "MWD"
+    assert message == "125.4,T,123.7,M,6.9,N,3.5,M"
+
+    expected_data = "$YDMWD,125.4,T,123.7,M,6.9,N,3.5,M*55"
+    assert format_nmea_0183_data("YD", message_type, message) == expected_data
+
+
+def test_decoder():
+    expected = WindDirectionAndSpeed(
+        101.8,
+        100.1,
+        7.6,
+        3.9,
+    )
+
+    decoded = WindDirectionAndSpeed.decode_nmea_0183(
+        "$YDMWD,101.8,T,100.1,M,7.6,N,3.9,M*5A",
+    )
+    assert decoded == expected

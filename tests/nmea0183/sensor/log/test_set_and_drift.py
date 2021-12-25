@@ -21,34 +21,32 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 '''
-from nmea_experiment.messages.ais.position import (AisPositionMessage,
-                                                   AisNavigationStatus,
-                                                   AisManeuverIndicator,
-                                                   AisRaimStatus)
-from nmea_experiment.messages.fields.gnss import (Latitude,
-                                                  Longitude,
-                                                  LongitudeIndicator,
-                                                  LatitudeIndicator)
+from nmea_experiment.helpers import format_nmea_0183_data
+from nmea_experiment.messages.sensor.log import SetAndDrift
 
 
 def test_encoder():
-    payload = AisPositionMessage(
-        1,
-        None,
-        777220000,
-        AisNavigationStatus.NOT_DEFINED,
-        None,
-        1,
-        0,
-        Longitude(11, 0, 25.044000000117705, LongitudeIndicator.EAST),
-        Latitude(49, 26, 44.07600000013127, LatitudeIndicator.NORTH),
-        None,
-        None,
-        62,
-        AisManeuverIndicator.NOT_AVAILABLE,
-        4,
-        AisRaimStatus.NOT_IN_USE,
-        413852,
-    ).encode()
+    message_type, message = SetAndDrift(
+        0.9,
+        359.2,
+        0.0,
+    ).encode_nmea_0183()
 
-    assert payload == "1;U=g`?P010jHdLLBh4f4?wtAU2L,0"
+    assert message_type == "VDR"
+    assert message == "0.9,T,359.2,M,0.0,N"
+
+    expected_data = "$YDVDR,0.9,T,359.2,M,0.0,N*20"
+    assert format_nmea_0183_data("YD", message_type, message) == expected_data
+
+
+def test_decoder():
+    expected = SetAndDrift(
+        23.4,
+        21.7,
+        0.0,
+    )
+
+    decoded = SetAndDrift.decode_nmea_0183(
+        "$YDVDR,23.4,T,21.7,M,0.0,N*25",
+    )
+    assert decoded == expected

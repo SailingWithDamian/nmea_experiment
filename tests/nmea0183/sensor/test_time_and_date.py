@@ -21,34 +21,46 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 '''
-from nmea_experiment.messages.ais.position import (AisPositionMessage,
-                                                   AisNavigationStatus,
-                                                   AisManeuverIndicator,
-                                                   AisRaimStatus)
-from nmea_experiment.messages.fields.gnss import (Latitude,
-                                                  Longitude,
-                                                  LongitudeIndicator,
-                                                  LatitudeIndicator)
+from datetime import datetime
+
+from nmea_experiment.helpers import format_nmea_0183_data
+from nmea_experiment.messages.sensor.environment import TimeAndDate
 
 
 def test_encoder():
-    payload = AisPositionMessage(
-        1,
-        None,
-        777220000,
-        AisNavigationStatus.NOT_DEFINED,
-        None,
-        1,
+    message_type, message = TimeAndDate(
+        datetime(year=2021,
+                 month=12,
+                 day=25,
+                 hour=21,
+                 minute=55,
+                 second=27,
+                 microsecond=26),
         0,
-        Longitude(11, 0, 25.044000000117705, LongitudeIndicator.EAST),
-        Latitude(49, 26, 44.07600000013127, LatitudeIndicator.NORTH),
-        None,
-        None,
-        62,
-        AisManeuverIndicator.NOT_AVAILABLE,
-        4,
-        AisRaimStatus.NOT_IN_USE,
-        413852,
-    ).encode()
+        0,
+    ).encode_nmea_0183()
 
-    assert payload == "1;U=g`?P010jHdLLBh4f4?wtAU2L,0"
+    assert message_type == "ZDA"
+    assert message == "215527.26,25,12,2021,00,00"
+
+    expected_data = "$YDZDA,215527.26,25,12,2021,00,00*6B"
+    assert format_nmea_0183_data("YD", message_type, message) == expected_data
+
+
+def test_decoder():
+    expected = TimeAndDate(
+        datetime(year=2021,
+                 month=12,
+                 day=25,
+                 hour=21,
+                 minute=55,
+                 second=36,
+                 microsecond=29),
+        0,
+        0,
+    )
+
+    decoded = TimeAndDate.decode_nmea_0183(
+        "$YDZDA,215536.29,25,12,2021,00,00*64",
+    )
+    assert decoded == expected

@@ -21,34 +21,48 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 '''
-from nmea_experiment.messages.ais.position import (AisPositionMessage,
-                                                   AisNavigationStatus,
-                                                   AisManeuverIndicator,
-                                                   AisRaimStatus)
-from nmea_experiment.messages.fields.gnss import (Latitude,
-                                                  Longitude,
-                                                  LongitudeIndicator,
-                                                  LatitudeIndicator)
+from nmea_experiment.helpers import format_nmea_0183_data
+from nmea_experiment.messages.sensor.environment import MeteorologicalComposite
 
 
 def test_encoder():
-    payload = AisPositionMessage(
-        1,
-        None,
-        777220000,
-        AisNavigationStatus.NOT_DEFINED,
-        None,
-        1,
-        0,
-        Longitude(11, 0, 25.044000000117705, LongitudeIndicator.EAST),
-        Latitude(49, 26, 44.07600000013127, LatitudeIndicator.NORTH),
+    message_type, message = MeteorologicalComposite(
         None,
         None,
-        62,
-        AisManeuverIndicator.NOT_AVAILABLE,
-        4,
-        AisRaimStatus.NOT_IN_USE,
-        413852,
-    ).encode()
+        None,
+        21.3,
+        None,
+        None,
+        None,
+        22.8,
+        21.1,
+        3.1,
+        1.6,
+    ).encode_nmea_0183()
 
-    assert payload == "1;U=g`?P010jHdLLBh4f4?wtAU2L,0"
+    assert message_type == "MDA"
+    assert message == ",I,,B,,C,21.3,C,,,,C,22.8,T,21.1,M,3.1,N,1.6,M"
+
+    expected_data = "$YDMDA,,I,,B,,C,21.3,C,,,,C,22.8,T,21.1,M,3.1,N,1.6,M*16"
+    assert format_nmea_0183_data("YD", message_type, message) == expected_data
+
+
+def test_decoder():
+    expected = MeteorologicalComposite(
+        None,
+        None,
+        None,
+        21.3,
+        None,
+        None,
+        None,
+        60.8,
+        59.1,
+        5.6,
+        2.9,
+    )
+
+    decoded = MeteorologicalComposite.decode_nmea_0183(
+        "$YDMDA,,I,,B,,C,21.3,C,,,,C,60.8,T,59.1,M,5.6,N,2.9,M*12",
+    )
+    assert decoded == expected

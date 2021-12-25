@@ -21,34 +21,38 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 '''
-from nmea_experiment.messages.ais.position import (AisPositionMessage,
-                                                   AisNavigationStatus,
-                                                   AisManeuverIndicator,
-                                                   AisRaimStatus)
-from nmea_experiment.messages.fields.gnss import (Latitude,
-                                                  Longitude,
-                                                  LongitudeIndicator,
-                                                  LatitudeIndicator)
+from nmea_experiment.messages.fields.gnss import LatitudeIndicator, LongitudeIndicator
+
+from nmea_experiment.helpers import format_nmea_0183_data
+from nmea_experiment.messages.sensor.heading import HeadingDeviationAndVariation
 
 
 def test_encoder():
-    payload = AisPositionMessage(
-        1,
-        None,
-        777220000,
-        AisNavigationStatus.NOT_DEFINED,
-        None,
-        1,
-        0,
-        Longitude(11, 0, 25.044000000117705, LongitudeIndicator.EAST),
-        Latitude(49, 26, 44.07600000013127, LatitudeIndicator.NORTH),
+    message_type, message = HeadingDeviationAndVariation(
+        222.6,
         None,
         None,
-        62,
-        AisManeuverIndicator.NOT_AVAILABLE,
-        4,
-        AisRaimStatus.NOT_IN_USE,
-        413852,
-    ).encode()
+        1.7,
+        LongitudeIndicator.EAST,
+    ).encode_nmea_0183()
 
-    assert payload == "1;U=g`?P010jHdLLBh4f4?wtAU2L,0"
+    assert message_type == "HDG"
+    assert message == "222.6,,,1.7,E"
+
+    expected_data = "$YDHDG,222.6,,,1.7,E*3D"
+    assert format_nmea_0183_data("YD", message_type, message) == expected_data
+
+
+def test_decoder():
+    expected = HeadingDeviationAndVariation(
+        222.1,
+        None,
+        None,
+        1.7,
+        LongitudeIndicator.EAST,
+    )
+
+    decoded = HeadingDeviationAndVariation.decode_nmea_0183(
+        "$YDHDG,222.1,,,1.7,E*3A",
+    )
+    assert decoded == expected
