@@ -31,14 +31,14 @@ from nmea_experiment.messages.base import BaseMessage
 class WaterSpeedAndHeading(BaseMessage):
     _IDENTIFIER = "VHW"
 
-    heading_true: float
+    heading_true: Optional[float]
     heading_magnetic: float
     speed_knots: float
     speed_km: float
 
     def _encode_nmea_0183(self) -> str:
         return ",".join([
-            f'{self.heading_true:.1f}',
+            f'{self.heading_true:.1f}' if self.heading_true is not None else '',
             "T",
             f'{self.heading_magnetic:.1f}',
             "M",
@@ -52,7 +52,7 @@ class WaterSpeedAndHeading(BaseMessage):
     @staticmethod
     def _decode_nmea_0183(data) -> 'WaterSpeedAndHeading':
         return WaterSpeedAndHeading(
-            float(data[1]),
+            float(data[1]) if data[1] else None,
             float(data[3]),
             float(data[5]),
             float(data[7]),
