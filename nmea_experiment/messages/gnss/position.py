@@ -59,5 +59,5 @@ class GnssPosition(BaseMessage):
             Longitude.decode_nmea_0183(data[3], data[4]),
             float(data[5]),
             RecieverIndicator(data[6]),
-            data[7] == "M" if len(data) > 6 else None
+            data[7] == "M" if len(data) > 5 else None
         )

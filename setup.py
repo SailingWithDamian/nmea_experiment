@@ -20,7 +20,7 @@ setup(
     platforms='any',
     install_requires=install_requires,
     test_requires=test_requires,
-    entry_points = {
+    entry_points={
         'console_scripts': [
             'nmea0183-sender = nmea_experiment.cli.sender:main',
             'nmea0183-dumper = nmea_experiment.cli.receiver:main',
