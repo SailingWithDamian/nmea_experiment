@@ -26,6 +26,7 @@ import logging
 from datetime import datetime
 from typing import List
 
+from nmea_experiment.messages.ais.base import AisInternalMessage, AisExternalMessage
 from nmea_experiment.messages.gnss.active_satellites import GpsActiveSatellites
 from nmea_experiment.messages.gnss.datum import DatumReference
 from nmea_experiment.messages.gnss.minimum_specific_transit import GnssMinimumSpecificTransit
@@ -56,7 +57,7 @@ _IDENTIFIER_MAP = {
                 TrackMadeGoodAndGroundSpeed, DistanceTraveledThroughWater,
                 SetAndDrift, WaterSpeedAndHeading, RudderAngle,
                 WindDirectionAndSpeed, WindSpeedAndAngle, RelativeWindSpeedAndAngle,
-                TrueWindSpeedAndAngle}
+                TrueWindSpeedAndAngle, AisInternalMessage, AisExternalMessage}
 }
 
 

@@ -52,3 +52,36 @@ def test_encoder():
     ).encode()
 
     assert payload == "1;U=g`?P010jHdLLBh4f4?wtAU2L,0"
+
+
+def test_decoder():
+    expected = AisPositionMessage(
+        1,
+        None,
+        777220000,
+        AisNavigationStatus.NOT_DEFINED,
+        None,
+        1,
+        0,
+        Longitude(11, 0, 25.044000000002598, LongitudeIndicator.EAST),
+        Latitude(49, 26, 44.07600000000343, LatitudeIndicator.NORTH),
+        None,
+        None,
+        62,
+        AisManeuverIndicator.NOT_AVAILABLE,
+        4,
+        AisRaimStatus.NOT_IN_USE,
+        413852,
+    )
+
+    payload = (
+        '00000100101110010100'
+        '110110111110100000111'
+        '110000000000000000100'
+        '000011001001100010110'
+        '001110001110001001011'
+        '000000010010111000010'
+        '000111111111111110001'
+        '0001100101000010011100'
+    )
+    assert AisPositionMessage.decode(payload) == expected

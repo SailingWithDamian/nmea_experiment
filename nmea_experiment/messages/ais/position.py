@@ -38,6 +38,8 @@ from nmea_experiment.messages.fields.gnss import (Latitude,
 
 @dataclass(frozen=True, init=True)
 class AisPositionMessage:
+    _IDENTIFIERS = {1, 2, 3}
+
     message_type: int
     repeat_indicator: Optional[int]
     mmsi: int
@@ -54,6 +56,46 @@ class AisPositionMessage:
     reserved: int
     raim_flag: AisRaimStatus
     radio_state: int
+
+    @staticmethod
+    def decode(payload: str) -> 'AisPositionMessage':
+        def _unpack_coord(payload):
+            degrees = (int(payload, 2) / 600000.0)
+            min = (degrees - int(degrees)) * 60
+            seconds = (min - int(min)) * 60
+            return int(degrees), int(min), seconds
+
+        long_degrees, long_minutes, long_decimal = _unpack_coord(payload[61:89])
+        lat_degrees, lat_minutes, lat_decimal = _unpack_coord(payload[89:116])
+
+        return AisPositionMessage(
+            int(payload[0:6], 2),
+            int(payload[6:8], 2) if int(payload[6:8], 2) else None,
+            int(payload[8:38], 2),
+            AisNavigationStatus(int(payload[38:42], 2)),
+            int(payload[42:50], 2) if int(payload[42:50], 2) < 128 else None,
+            int(payload[50:60], 2),
+            int(payload[60], 2),
+            Longitude(
+                long_degrees,
+                long_minutes,
+                long_decimal,
+                LongitudeIndicator.EAST if long_degrees > 0 else LongitudeIndicator.WEST,
+            ),
+            Latitude(
+                lat_degrees,
+                lat_minutes,
+                lat_decimal,
+                LatitudeIndicator.NORTH if long_degrees > 0 else LatitudeIndicator.SOUTH,
+            ),
+            int(payload[116:128], 2) if int(payload[116:128], 2) != 3600 else None,
+            int(payload[128:137], 2) if int(payload[128:137], 2) != 511 else None,
+            int(payload[137:143], 2),
+            AisManeuverIndicator(int(payload[143:145], 2)),
+            int(payload[145:148], 2),
+            AisRaimStatus(int(payload[148], 2)),
+            int(payload[149:168], 2),
+        )
 
     def encode(self) -> str:
         long = 181
@@ -76,7 +118,7 @@ class AisPositionMessage:
                 lat = 0 - lat
 
         # x-ref https://gpsd.gitlab.io/gpsd/AIVDM.html
-        return encode_ais_payload([
+        payload, padding = encode_ais_payload([
             bitstring.Bits(f"uint:6={self.message_type}"),
             bitstring.Bits(f"uint:2={self.repeat_indicator if self.repeat_indicator else 0}"),
             bitstring.Bits(f"uint:30={self.mmsi}"),
@@ -94,3 +136,4 @@ class AisPositionMessage:
             bitstring.Bits(f"uint:1={self.raim_flag.value if self.raim_flag else 0}"),
             bitstring.Bits(f"uint:19={self.radio_state if self.radio_state else 0}"),
         ])
+        return f'{payload},{padding}'

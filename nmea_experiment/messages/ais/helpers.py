@@ -21,12 +21,12 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 '''
-from typing import Any
+from typing import Any, Tuple
 
 import bitstring  # type: ignore
 
 
-def encode_ais_payload(fields: Any) -> str:
+def encode_ais_payload(fields: Any) -> Tuple[str, int]:
     # The payload is an ASCII encoded bit vector,
     # with each char representing 6 bits of data.
     bits = bitstring.Bits().join(fields)
@@ -46,4 +46,14 @@ def encode_ais_payload(fields: Any) -> str:
     if padding := (len(bits) % 6):
         padding -= 6
 
-    return f'{payload},{padding:d}'
+    return f'{payload}', padding
+
+
+def decode_ais_armor(payload: str, padding: int) -> str:
+    fields = []
+    for i in range(len(payload) - padding):
+        value = ord(payload[i]) - 48
+        if value > 40:
+            value -= 8
+        fields.append(f'{value:06b}')
+    return ''.join(fields)

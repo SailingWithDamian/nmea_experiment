@@ -26,7 +26,7 @@ import logging
 import socket
 
 from nmea_experiment.helpers import format_nmea_0183_data
-from nmea_experiment.messages.ais.base import AisMessage
+from nmea_experiment.messages.ais.base import AisExternalMessage
 from nmea_experiment.messages.ais.position import AisPositionMessage
 from nmea_experiment.messages.fields.ais import (AisChannel,
                                                  AisRaimStatus,
@@ -50,7 +50,7 @@ async def anchor_near_square(address: str, port: int) -> None:
             (777220003, Longitude(20, 0, 10, LongitudeIndicator.WEST), Latitude(40, 0, 10, LatitudeIndicator.NORTH)),
         ]:
             logger.info(f'Sending AisPositionMessage for {mmsi} @ {lat} / {lon}')
-            message_type, message = AisMessage(
+            message_type, message = AisExternalMessage(
                 1,
                 1,
                 None,
@@ -72,7 +72,8 @@ async def anchor_near_square(address: str, port: int) -> None:
                     4,
                     AisRaimStatus.NOT_IN_USE,
                     413852,
-                ).encode(),
+                ),
+                "",
             ).encode_nmea_0183()
             payload = format_nmea_0183_data("NT", message_type, message)
             s.sendto(f"{payload}\r\n".encode('ascii'), (address, port))

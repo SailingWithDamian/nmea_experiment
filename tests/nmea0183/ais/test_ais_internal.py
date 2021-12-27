@@ -22,10 +22,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 '''
 from nmea_experiment.helpers import format_nmea_0183_data
-from nmea_experiment.messages.ais.base import AisMessage
+from nmea_experiment.messages.ais.base import AisInternalMessage
 from nmea_experiment.messages.ais.position import AisPositionMessage
-from nmea_experiment.messages.fields.ais import (AisChannel,
-                                                 AisNavigationStatus,
+from nmea_experiment.messages.fields.ais import (AisNavigationStatus,
                                                  AisManeuverIndicator,
                                                  AisRaimStatus)
 from nmea_experiment.messages.fields.gnss import (Latitude,
@@ -35,11 +34,10 @@ from nmea_experiment.messages.fields.gnss import (Latitude,
 
 
 def test_encoder():
-    message_type, message = AisMessage(
+    message_type, message = AisInternalMessage(
         1,
         1,
         None,
-        AisChannel.B,
         AisPositionMessage(
             1,
             None,
@@ -50,27 +48,30 @@ def test_encoder():
             0,
             Longitude(11, 0, 25.044000000117705, LongitudeIndicator.EAST),
             Latitude(49, 26, 44.07600000013127, LatitudeIndicator.NORTH),
-            None,
-            None,
+            3600,
+            511,
             62,
             AisManeuverIndicator.NOT_AVAILABLE,
             4,
             AisRaimStatus.NOT_IN_USE,
             413852,
-        ).encode(),
+        ),
+        "0000010010111001010011011011111010000011111000"
+        "0000000000000100000011001001100010110001110001"
+        "11000100101100000001001011100001000011111111111"
+        "11100010001100101000010011100",
     ).encode_nmea_0183()
 
-    assert message_type == "VDM"
-    assert message == "1,1,,B,1;U=g`?P010jHdLLBh4f4?wtAU2L,0"
-    assert format_nmea_0183_data("AI", message_type, message) == "!AIVDM,1,1,,B,1;U=g`?P010jHdLLBh4f4?wtAU2L,0*42"
+    assert message_type == "VDO"
+    assert message == "1,1,,1;U=g`?P010jHdLLBh4f4?wtAU2L,0"
+    assert format_nmea_0183_data("AI", message_type, message) == "!AIVDO,1,1,,1;U=g`?P010jHdLLBh4f4?wtAU2L,0*2E"
 
 
 def test_decoder():
-    expected = AisMessage(
+    expected = AisInternalMessage(
         1,
         1,
         None,
-        AisChannel.B,
         AisPositionMessage(
             1,
             None,
@@ -79,8 +80,8 @@ def test_decoder():
             None,
             1,
             0,
-            Longitude(11, 0, 25.044000000117705, LongitudeIndicator.EAST),
-            Latitude(49, 26, 44.07600000013127, LatitudeIndicator.NORTH),
+            Longitude(11, 0, 25.044000000002598, LongitudeIndicator.EAST),
+            Latitude(49, 26, 44.07600000000343, LatitudeIndicator.NORTH),
             None,
             None,
             62,
@@ -88,10 +89,14 @@ def test_decoder():
             4,
             AisRaimStatus.NOT_IN_USE,
             413852,
-        ).encode(),
+        ),
+        "0000010010111001010011011011111010000011111000"
+        "0000000000000100000011001001100010110001110001"
+        "11000100101100000001001011100001000011111111111"
+        "11100010001100101000010011100",
     )
 
-    decoded = AisMessage.decode_nmea_0183(
-        "!AIVDM,1,1,,B,1;U=g`?P010jHdLLBh4f4?wtAU2L,0*42"
+    decoded = AisInternalMessage.decode_nmea_0183(
+        "!AIVDO,1,1,,1;U=g`?P010jHdLLBh4f4?wtAU2L,0*2E"
     )
     assert decoded == expected

@@ -21,42 +21,104 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 '''
+import logging
 from dataclasses import dataclass
-from typing import Optional, Tuple
+from typing import Optional, List, Union
 
-from nmea_experiment.helpers import un_format_nmea_0183_data
+from nmea_experiment.messages.ais.helpers import decode_ais_armor
+from nmea_experiment.messages.ais.position import AisPositionMessage
+from nmea_experiment.messages.base import BaseMessage
 from nmea_experiment.messages.fields.ais import AisChannel
+
+logger = logging.getLogger(__name__)
+IDENTIFIER_MAP = {
+    identifier: cls
+    for cls in {AisPositionMessage, }
+    for identifier in cls._IDENTIFIERS
+}
 
 
 @dataclass(frozen=True, init=True)
-class AisMessage:
+class AisExternalMessage(BaseMessage):
+    _IDENTIFIER = "VDM"
+
     total_fragments: int
     fragment: int
     message_id: Optional[int]
     channel: AisChannel
-    payload: str
+    payload: Union[None, AisPositionMessage]
+    raw: str
 
-    def encode_nmea_0183(self) -> Tuple[str, str]:
-        message = ",".join(
+    def _encode_nmea_0183(self) -> str:
+        return ",".join(
             [
                 f"{self.total_fragments:d}",
                 f"{self.fragment:d}",
                 f"{self.message_id:d}" if self.message_id is not None else "",
                 self.channel.value,
-                self.payload,
+                self.payload.encode() if self.payload is not None else "",
             ]
         )
-        return "VDM", message
 
     @staticmethod
-    def decode_nmea_0183(payload: str) -> 'AisMessage':
-        data = un_format_nmea_0183_data(payload).split(',')
-        assert data[0] == 'VDM'
+    def _decode_nmea_0183(data: List[str]) -> 'AisExternalMessage':
+        model = None
+        payload = decode_ais_armor(data[5], int(data[6]))
+        message_id = int(payload[0:6], 2)
 
-        return AisMessage(
+        try:
+            model = IDENTIFIER_MAP[message_id].decode(payload)
+        except KeyError:
+            logger.debug(f'Unsupported AIS message type ({message_id}): {payload}')
+        except Exception as e:
+            logger.exception(f'AIS decoder for {message_id} failed: {payload}. {e}')
+
+        return AisExternalMessage(
             int(data[1]),
             int(data[2]),
             int(data[3]) if data[3] else None,
             AisChannel(data[4]),
-            f'{data[5]},{data[6]}',
+            model,
+            payload,
+        )
+
+
+@dataclass(frozen=True, init=True)
+class AisInternalMessage(BaseMessage):
+    _IDENTIFIER = "VDO"
+
+    total_fragments: int
+    fragment: int
+    message_id: Optional[int]
+    payload: Union[None, AisPositionMessage]
+    raw: str
+
+    def _encode_nmea_0183(self) -> str:
+        return ",".join(
+            [
+                f"{self.total_fragments:d}",
+                f"{self.fragment:d}",
+                f"{self.message_id:d}" if self.message_id is not None else "",
+                self.payload.encode() if self.payload is not None else "",
+            ]
+        )
+
+    @staticmethod
+    def _decode_nmea_0183(data: List[str]) -> 'AisInternalMessage':
+        model = None
+        payload = decode_ais_armor(data[4], int(data[5]))
+        message_id = int(payload[0:6], 2)
+        try:
+            model = IDENTIFIER_MAP[message_id].decode(payload)
+        except KeyError:
+            logger.debug(f'Unsupported AIS message type ({message_id}): {payload}')
+        except Exception as e:
+            logger.exception(f'AIS decoder for {message_id} failed: {payload}. {e}')
+
+        return AisInternalMessage(
+            int(data[1]),
+            int(data[2]),
+            int(data[3]) if data[3] else None,
+            model,
+            payload,
         )

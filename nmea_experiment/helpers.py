@@ -55,7 +55,7 @@ def format_nmea_0183_data(talker_id: str, message_type: str, message: str) -> st
     # Calculate if this is a standard NMEA message
     # or an encapsulated message requiring a specific decoder
     payload_type = '$'
-    if message_type in ('VDM',):
+    if message_type in ('VDM', 'VDO'):
         payload_type = '!'
 
     # Messages have a maximum length of 82 characters
