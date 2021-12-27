@@ -14,15 +14,16 @@ with Path('requirements-dev.txt').open('r') as fh:
     test_requires = [str(req) for req in pkg_resources.parse_requirements(fh)]
 
 setup(
-    name='nema_experiment',
+    name='nmea_experiment',
     packages=find_packages(),
     test_suite='tests',
     platforms='any',
     install_requires=install_requires,
     test_requires=test_requires,
-    entry_points = {
+    entry_points={
         'console_scripts': [
-            'nema0183-sender = nema_experiment.cli.sender:main'
+            'nmea0183-sender = nmea_experiment.cli.sender:main',
+            'nmea0183-dumper = nmea_experiment.cli.receiver:main',
         ]
     },
     classifiers=[
