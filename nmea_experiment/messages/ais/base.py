@@ -26,15 +26,19 @@ from dataclasses import dataclass
 from typing import Optional, List, Union
 
 from nmea_experiment.messages.ais.helpers import decode_ais_armor
-from nmea_experiment.messages.ais.position import AisPositionMessage
+from nmea_experiment.messages.ais.position_report_class_a import AisPositionClassAMessage
+from nmea_experiment.messages.ais.position_report_class_b import AisPositionClassBMessage
+from nmea_experiment.messages.ais.base_station_report import AisBaseStationReportMessage
 from nmea_experiment.messages.base import BaseMessage
 from nmea_experiment.messages.fields.ais import AisChannel
 
 logger = logging.getLogger(__name__)
 IDENTIFIER_MAP = {
-    identifier: cls
-    for cls in {AisPositionMessage, }
-    for identifier in cls._IDENTIFIERS
+    identifier: message
+    for message in {AisPositionClassAMessage,
+                    AisPositionClassBMessage,
+                    AisBaseStationReportMessage}
+    for identifier in message._IDENTIFIERS  # type: ignore
 }
 
 
@@ -46,7 +50,10 @@ class AisExternalMessage(BaseMessage):
     fragment: int
     message_id: Optional[int]
     channel: AisChannel
-    payload: Union[None, AisPositionMessage]
+    payload: Union[None,
+                   AisPositionClassAMessage,
+                   AisPositionClassBMessage,
+                   AisBaseStationReportMessage]
     raw: str
 
     def _encode_nmea_0183(self) -> str:
@@ -67,16 +74,16 @@ class AisExternalMessage(BaseMessage):
         message_id = int(payload[0:6], 2)
 
         try:
-            model = IDENTIFIER_MAP[message_id].decode(payload)
+            model = IDENTIFIER_MAP[message_id].decode(payload)  # type: ignore
         except KeyError:
-            logger.debug(f'Unsupported AIS message type ({message_id}): {payload}')
+            logger.warning(f'Unsupported AIS message type ({message_id}): {payload}')
         except Exception as e:
             logger.exception(f'AIS decoder for {message_id} failed: {payload}. {e}')
 
         return AisExternalMessage(
             int(data[1]),
             int(data[2]),
-            int(data[3]) if data[3] else None,
+            message_id,
             AisChannel(data[4]),
             model,
             payload,
@@ -90,7 +97,10 @@ class AisInternalMessage(BaseMessage):
     total_fragments: int
     fragment: int
     message_id: Optional[int]
-    payload: Union[None, AisPositionMessage]
+    payload: Union[None,
+                   AisPositionClassAMessage,
+                   AisPositionClassBMessage,
+                   AisBaseStationReportMessage]
     raw: str
 
     def _encode_nmea_0183(self) -> str:
@@ -106,19 +116,21 @@ class AisInternalMessage(BaseMessage):
     @staticmethod
     def _decode_nmea_0183(data: List[str]) -> 'AisInternalMessage':
         model = None
-        payload = decode_ais_armor(data[4], int(data[5]))
+        payload = (decode_ais_armor(data[5], int(data[6]))
+                   if len(data) == 7 else
+                   decode_ais_armor(data[4], int(data[5])))
         message_id = int(payload[0:6], 2)
         try:
-            model = IDENTIFIER_MAP[message_id].decode(payload)
+            model = IDENTIFIER_MAP[message_id].decode(payload)  # type: ignore
         except KeyError:
-            logger.debug(f'Unsupported AIS message type ({message_id}): {payload}')
+            logger.warning(f'Unsupported AIS message type ({message_id}): {payload}')
         except Exception as e:
             logger.exception(f'AIS decoder for {message_id} failed: {payload}. {e}')
 
         return AisInternalMessage(
             int(data[1]),
             int(data[2]),
-            int(data[3]) if data[3] else None,
+            message_id,
             model,
             payload,
         )

@@ -89,8 +89,8 @@ class MeteorologicalComposite(BaseMessage):
 class TimeAndDate(BaseMessage):
     _IDENTIFIER = "ZDA"
     datetime: datetime
-    local_offset_hours: int
-    local_offset_minutes: int
+    local_offset_hours: Optional[int]
+    local_offset_minutes: Optional[int]
 
     def _encode_nmea_0183(self) -> str:
         return ",".join([
@@ -114,8 +114,8 @@ class TimeAndDate(BaseMessage):
                 month=int(data[3]),
                 year=int(data[4]),
             ),
-            int(data[5]),
-            int(data[6]),
+            int(data[5]) if data[5] else None,
+            int(data[6]) if data[6] else None,
         )
 
 

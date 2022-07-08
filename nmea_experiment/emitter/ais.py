@@ -27,7 +27,7 @@ import socket
 
 from nmea_experiment.helpers import format_nmea_0183_data
 from nmea_experiment.messages.ais.base import AisExternalMessage
-from nmea_experiment.messages.ais.position import AisPositionMessage
+from nmea_experiment.messages.ais.position_report_class_a import AisPositionClassAMessage
 from nmea_experiment.messages.fields.ais import (AisChannel,
                                                  AisRaimStatus,
                                                  AisNavigationStatus,
@@ -55,7 +55,7 @@ async def anchor_near_square(address: str, port: int) -> None:
                 1,
                 None,
                 AisChannel.B,
-                AisPositionMessage(
+                AisPositionClassAMessage(
                     1,
                     None,
                     mmsi,

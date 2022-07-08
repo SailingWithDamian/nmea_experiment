@@ -21,10 +21,10 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 '''
-from nmea_experiment.messages.ais.position import (AisPositionMessage,
-                                                   AisNavigationStatus,
-                                                   AisManeuverIndicator,
-                                                   AisRaimStatus)
+from nmea_experiment.messages.ais.position_report_class_a import (AisPositionClassAMessage,
+                                                                  AisNavigationStatus,
+                                                                  AisManeuverIndicator,
+                                                                  AisRaimStatus)
 from nmea_experiment.messages.fields.gnss import (Latitude,
                                                   Longitude,
                                                   LongitudeIndicator,
@@ -32,7 +32,7 @@ from nmea_experiment.messages.fields.gnss import (Latitude,
 
 
 def test_encoder():
-    payload = AisPositionMessage(
+    payload = AisPositionClassAMessage(
         1,
         None,
         777220000,
@@ -55,7 +55,7 @@ def test_encoder():
 
 
 def test_decoder():
-    expected = AisPositionMessage(
+    expected = AisPositionClassAMessage(
         1,
         None,
         777220000,
@@ -84,4 +84,4 @@ def test_decoder():
         '000111111111111110001'
         '0001100101000010011100'
     )
-    assert AisPositionMessage.decode(payload) == expected
+    assert AisPositionClassAMessage.decode(payload) == expected

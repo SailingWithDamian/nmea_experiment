@@ -39,6 +39,11 @@ class AisNavigationStatus(Enum):
     AGROUND = 6
     ENGAGED_IN_FISHING = 7
     UNDERWAY_SAILING = 8
+    HIGH_SPEED_CRAFT = 9
+    WING_IN_GROUND_CRAFT = 10
+    RESERVED_1 = 11
+    RESERVED_2 = 12
+    RESERVED_3 = 13
     AIS_SART = 14
     NOT_DEFINED = 15
 
@@ -52,3 +57,8 @@ class AisManeuverIndicator(Enum):
 class AisRaimStatus(Enum):
     NOT_IN_USE = 0
     IN_USE = 1
+
+
+class AisCSUnitStatus(Enum):
+    CLASS_B_SOTDMA = 0
+    CLASS_B_CS = 1

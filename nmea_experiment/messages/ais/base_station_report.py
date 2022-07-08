@@ -37,45 +37,46 @@ from nmea_experiment.messages.fields.gnss import (Latitude,
 
 
 @dataclass(frozen=True, init=True)
-class AisPositionMessage:
-    _IDENTIFIERS = {1, 2, 3}
+class AisBaseStationReportMessage:
+    _IDENTIFIERS = {4, }
 
     message_type: int
     repeat_indicator: Optional[int]
     mmsi: int
-    navigation_status: AisNavigationStatus
-    rate_of_turn: Optional[int]
-    speed_over_ground: float
-    position_accuracy: int
+    year: int
+    month: int
+    day: int
+    hour: int
+    minute: int
+    second: int
+    quality: int
     longitude: Longitude
     latitude: Latitude
-    course_over_ground: Optional[float]
-    true_heading: Optional[float]
-    timestamp: int
-    maneuver_indicator: AisManeuverIndicator
-    reserved: int
+    epfd_type: int
     raim_flag: AisRaimStatus
-    radio_state: int
+    # sotdma_state: ??
 
     @staticmethod
-    def decode(payload: str) -> 'AisPositionMessage':
+    def decode(payload: str) -> 'AisBaseStationReportMessage':
         def _unpack_coord(payload):
             degrees = (int(payload, 2) / 600000.0)
             min = (degrees - int(degrees)) * 60
             seconds = (min - int(min)) * 60
             return int(degrees), int(min), seconds
 
-        long_degrees, long_minutes, long_decimal = _unpack_coord(payload[61:89])
-        lat_degrees, lat_minutes, lat_decimal = _unpack_coord(payload[89:116])
-
-        return AisPositionMessage(
+        long_degrees, long_minutes, long_decimal = _unpack_coord(payload[79:107])
+        lat_degrees, lat_minutes, lat_decimal = _unpack_coord(payload[107:134])
+        return AisBaseStationReportMessage(
             int(payload[0:6], 2),
             int(payload[6:8], 2) if int(payload[6:8], 2) else None,
             int(payload[8:38], 2),
-            AisNavigationStatus(int(payload[38:42], 2)),
-            int(payload[42:50], 2) if int(payload[42:50], 2) < 128 else None,
-            int(payload[50:60], 2),
-            int(payload[60], 2),
+            int(payload[38:52], 2),
+            int(payload[52:56], 2),
+            int(payload[56:61], 2),
+            int(payload[61:66], 2),
+            int(payload[66:72], 2),
+            int(payload[72:78], 2),
+            int(payload[78], 2),
             Longitude(
                 long_degrees,
                 long_minutes,
@@ -88,13 +89,9 @@ class AisPositionMessage:
                 lat_decimal,
                 LatitudeIndicator.NORTH if long_degrees > 0 else LatitudeIndicator.SOUTH,
             ),
-            int(payload[116:128], 2) if int(payload[116:128], 2) != 3600 else None,
-            int(payload[128:137], 2) if int(payload[128:137], 2) != 511 else None,
-            int(payload[137:143], 2),
-            AisManeuverIndicator(int(payload[143:145], 2)),
-            int(payload[145:148], 2),
+            int(payload[134:138], 2),
+            # 138-147 spare
             AisRaimStatus(int(payload[148], 2)),
-            int(payload[149:168], 2),
         )
 
     def encode(self) -> str:
@@ -122,18 +119,17 @@ class AisPositionMessage:
             bitstring.Bits(f"uint:6={self.message_type}"),
             bitstring.Bits(f"uint:2={self.repeat_indicator if self.repeat_indicator else 0}"),
             bitstring.Bits(f"uint:30={self.mmsi}"),
-            bitstring.Bits(f"uint:4={self.navigation_status.value if self.navigation_status else 15}"),
-            bitstring.Bits(f"int:8={self.rate_of_turn if self.rate_of_turn else -128}"),
-            bitstring.Bits(f"uint:10={self.speed_over_ground if self.speed_over_ground else 0}"),
-            bitstring.Bits(f"uint:1={self.position_accuracy if self.position_accuracy else 0}"),
+            bitstring.Bits(f"uint:14={self.year if self.year else 0}"),
+            bitstring.Bits(f"uint:4={self.month if self.year else 0}"),
+            bitstring.Bits(f"uint:5={self.day if self.day else 0}"),
+            bitstring.Bits(f"uint:5={self.hour if self.hour else 0}"),
+            bitstring.Bits(f"uint:6={self.minute if self.minute else 0}"),
+            bitstring.Bits(f"uint:6={self.second if self.second else 0}"),
+            bitstring.Bits(f"uint:1={self.quality if self.quality else 0}"),
             bitstring.Bits(f"int:28={long}"),
             bitstring.Bits(f"int:27={lat}"),
-            bitstring.Bits(f"uint:12={self.course_over_ground if self.course_over_ground else 3600}"),
-            bitstring.Bits(f"uint:9={self.true_heading if self.true_heading else 511}"),
-            bitstring.Bits(f"uint:6={self.timestamp if self.timestamp else 60}"),
-            bitstring.Bits(f"uint:2={self.maneuver_indicator.value if self.maneuver_indicator else 0}"),
-            bitstring.Bits(f"uint:3={self.reserved if self.reserved else 0}"),
+            bitstring.Bits(f"uint:4={self.epfd_type if self.epfd_type else 0}"),
+            bitstring.Bits("uint:10="),
             bitstring.Bits(f"uint:1={self.raim_flag.value if self.raim_flag else 0}"),
-            bitstring.Bits(f"uint:19={self.radio_state if self.radio_state else 0}"),
         ])
         return f'{payload},{padding}'

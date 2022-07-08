@@ -23,7 +23,7 @@ SOFTWARE.
 '''
 from nmea_experiment.helpers import format_nmea_0183_data
 from nmea_experiment.messages.ais.base import AisInternalMessage
-from nmea_experiment.messages.ais.position import AisPositionMessage
+from nmea_experiment.messages.ais.position_report_class_a import AisPositionClassAMessage
 from nmea_experiment.messages.fields.ais import (AisNavigationStatus,
                                                  AisManeuverIndicator,
                                                  AisRaimStatus)
@@ -38,7 +38,7 @@ def test_encoder():
         1,
         1,
         None,
-        AisPositionMessage(
+        AisPositionClassAMessage(
             1,
             None,
             777220000,
@@ -71,8 +71,8 @@ def test_decoder():
     expected = AisInternalMessage(
         1,
         1,
-        None,
-        AisPositionMessage(
+        1,
+        AisPositionClassAMessage(
             1,
             None,
             777220000,
