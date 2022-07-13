@@ -27,9 +27,7 @@ from typing import Optional
 import bitstring  # type: ignore
 
 from nmea_experiment.messages.ais.helpers import encode_ais_payload
-from nmea_experiment.messages.fields.ais import (AisNavigationStatus,
-                                                 AisManeuverIndicator,
-                                                 AisRaimStatus,
+from nmea_experiment.messages.fields.ais import (AisRaimStatus,
                                                  AisCSUnitStatus)
 from nmea_experiment.messages.fields.gnss import (Latitude,
                                                   Longitude,
