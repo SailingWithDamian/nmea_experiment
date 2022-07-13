@@ -58,7 +58,6 @@ class AisPositionClassBMessage:
     message_22_flag: bool
     assigned_flag: bool
     raim_flag: AisRaimStatus
-    #radio_status: RadioStatus
 
     @staticmethod
     def decode(payload: str) -> 'AisPositionClassBMessage':
@@ -101,7 +100,6 @@ class AisPositionClassBMessage:
             int(payload[145], 2) == 1,
             int(payload[146], 2) == 1,
             AisRaimStatus(int(payload[147], 2)),
-            #AisRadioStatus(int(payload[148:168], 2)), ??
         )
 
     def encode(self) -> str:
