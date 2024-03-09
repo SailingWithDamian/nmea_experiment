@@ -1,5 +1,5 @@
 tox==4.14.1
 pytest==8.0.2
 pylama==8.4.1
-mypy==1.8.0
+mypy==1.9.0
 coverage==7.4.3
