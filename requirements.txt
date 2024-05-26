@@ -1,2 +1,2 @@
-bitstring==4.2.2
+bitstring==4.2.3
 click==8.1.7
