@@ -1,5 +1,5 @@
-tox==4.25.0
-pytest==8.3.5
+tox==4.30.2
+pytest==8.4.2
 pylama==8.4.1
-mypy==1.15.0
-coverage==7.8.0
+mypy==1.17.1
+coverage==7.10.6
